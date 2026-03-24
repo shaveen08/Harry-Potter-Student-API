@@ -4,30 +4,36 @@ let showUser = document.querySelector(".show-user");
 // All the user data will be stored here
 let studentsData = [];
 
-// Fetching user data
-// fetch("https://hp-api.onrender.com/api/characters/students")
-//   .then((res) => res.json())
-//   .then((data) => {
-//     studentsData = data;
-//   });
+// Debounce function
+function debounce(fn, delay){
+  let timer;
+  return function(...args){
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  }
+}
 
+// Fetching data from server using async/await
 async function getData() {
   try {
+    searchInput.disabled = true;
+    
     const response = await fetch(
       "https://hp-api.onrender.com/api/characters/students",
     );
     const data = await response.json();
     studentsData = data;
+
+    searchInput.disabled = false;
+    console.log("Data loaded!", studentsData.length, "students");
   } catch (err) {
     console.log(err);
   }
 }
 getData();
 
-// Listening to user input
-searchInput.addEventListener("keyup", () => {
-  let searchVal = searchInput.value.toLowerCase().trim();
-
+// Search logic
+function searchStudents(searchVal){
   // If search input is empty clear UI
   if (!searchVal) {
     // showUser.innerHTML = `<span id="title">Students:</span>`;
@@ -60,4 +66,13 @@ searchInput.addEventListener("keyup", () => {
   }
 
   showUser.appendChild(ul);
+}
+
+// Debounce the search
+const debouncedSearch = debounce(searchStudents, 500);
+
+// Listening to user input
+searchInput.addEventListener("keyup", () => {
+  let searchVal = searchInput.value.toLowerCase().trim();
+  debouncedSearch(searchVal);
 });
